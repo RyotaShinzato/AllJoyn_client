@@ -84,11 +84,15 @@ public class MainActivity extends ActionBarActivity {
         mListViewArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
         mListView = (ListView) findViewById(R.id.ListView);
         mListView.setAdapter(mListViewArrayAdapter);
+        
+        final BluetoothManager mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        final BluetoothAdapter mBluetoothAdapter = mBluetoothManager.getAdapter();
                         
         HandlerThread busThread = new HandlerThread("BusHandler");
         busThread.start();
         mBusHandler = new BusHandler(busThread.getLooper());
-                
+        
+        //CONNECT
         mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
         mHandler.sendEmptyMessage(START_PROGRESS);
                 
@@ -99,19 +103,18 @@ public class MainActivity extends ActionBarActivity {
         		Log.d(TAG,"クリック");
         		
         		//iBeaconスキャン
-        		final BluetoothManager mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-                BluetoothAdapter mBluetoothAdapter = mBluetoothManager.getAdapter();
-                mBluetoothAdapter = mBluetoothManager.getAdapter();
-                mBluetoothAdapter.startLeScan(mLeScanCallback);
+        		mBluetoothAdapter.startLeScan(mLeScanCallback);
         		
-                /*
-        		Message msg = mBusHandler.obtainMessage(BusHandler.PING,"UUID:XXXXXXXXX");
-        		String ping = (String) msg.obj;
-        		mListViewArrayAdapter.add("ping: "+ping);
-        		mBusHandler.sendMessage(msg);
-        		*/
+        		//5秒後にスキャン停止
+        		mHandler.postDelayed(new Runnable(){
+        			@Override
+        			public void run(){
+        				mBluetoothAdapter.stopLeScan(mLeScanCallback);;
+        			}
+        		}, 5000);
         	}
         });
+        
         
     }
 
