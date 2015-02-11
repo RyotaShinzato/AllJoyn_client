@@ -1,5 +1,7 @@
 package com.example.client;
 
+import java.lang.reflect.Method;
+
 import org.alljoyn.bus.BusAttachment;
 import org.alljoyn.bus.BusException;
 import org.alljoyn.bus.BusListener;
@@ -15,6 +17,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
+import android.os.ParcelUuid;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -62,7 +65,7 @@ public class MainActivity extends ActionBarActivity {
 				break;
 			case MESSAGE_REPLY:
 				String rep = (String)msg.obj;
-				mListViewArrayAdapter.add("reply: "+rep);
+				mListViewArrayAdapter.add(rep);
 				break;
 			case MESSAGE_PING:
 				Message ms = mBusHandler.obtainMessage(BusHandler.PING, msg.obj);
@@ -256,7 +259,6 @@ public class MainActivity extends ActionBarActivity {
     	    	  try{
     	    		  if(mClientInterface != null){
     	    			  String reply = mClientInterface.Ping((String) msg.obj);
-    	    			  Log.d(TAG,"reply= "+reply);
     	    			  mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_REPLY,reply));
     	    		  }
     	    	  } catch(BusException ex){
@@ -273,8 +275,8 @@ private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.L
 		
 		@Override
 		public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-			Log.d(TAG,"onLeScan called");
 			// TODO Auto-generated method stub
+						
 			if(scanRecord.length > 30)
 		    {
 		        //iBeacon の場合 6 byte 目から、 9 byte 目はこの値に固定されている。
@@ -304,17 +306,19 @@ private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.L
 		 
 		            String major = IntToHex2(scanRecord[25] & 0xff) + IntToHex2(scanRecord[26] & 0xff);
 		            String minor = IntToHex2(scanRecord[27] & 0xff) + IntToHex2(scanRecord[28] & 0xff);
-		            Log.d(TAG,"uuid: "+uuid);
-		            Message msg = mBusHandler.obtainMessage(mBusHandler.PING,uuid);
+		            String message = "UUID: " + uuid + "\n RSSI: " + String.valueOf(rssi);
+		            Message msg = mBusHandler.obtainMessage(mBusHandler.PING,message);
 		            mBusHandler.sendMessage(msg);
 		        }
 		    }
+		    
 		}
-
+		
 		private String IntToHex2(int i) {
 			char hex_2[] = {Character.forDigit((i>>4) & 0x0f,16),Character.forDigit(i&0x0f, 16)};
 		    String hex_2_str = new String(hex_2);
 		    return hex_2_str.toUpperCase();
 		}
+		
     };
 }
