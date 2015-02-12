@@ -48,16 +48,17 @@ public class MainActivity extends ActionBarActivity {
 	private ProgressDialog mProgressDialog;
 	
 	private static final String TAG = "Client";
-	private static final int START_PROGRESS = 1;
+	private static final int START_CONNECT_PROGRESS = 1;
 	private static final int STOP_PROGRESS= 2;
 	private static final int MESSAGE_REPLY = 3;
 	private static final int MESSAGE_PING = 4;
+	private static final int START_SCAN_PROGRESS = 5;
 	
 	private Handler mHandler = new Handler(){
 		@Override
 		public void handleMessage(Message msg){
 			switch (msg.what){
-			case START_PROGRESS:
+			case START_CONNECT_PROGRESS:
 				mProgressDialog = ProgressDialog.show(MainActivity.this,"","接続中",true,true);
 				break;
 			case STOP_PROGRESS:
@@ -70,6 +71,10 @@ public class MainActivity extends ActionBarActivity {
 			case MESSAGE_PING:
 				Message ms = mBusHandler.obtainMessage(BusHandler.PING, msg.obj);
 				mBusHandler.sendMessage(ms);
+				break;
+			case START_SCAN_PROGRESS:
+				mProgressDialog = ProgressDialog.show(MainActivity.this,"","SCANNING",true,true);				
+				break;
 			default:
 				break;
 			}
@@ -97,7 +102,7 @@ public class MainActivity extends ActionBarActivity {
         
         //CONNECT
         mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
-        mHandler.sendEmptyMessage(START_PROGRESS);
+        mHandler.sendEmptyMessage(START_CONNECT_PROGRESS);
                 
         Button btn = (Button)findViewById(R.id.send);
         btn.setOnClickListener(new View.OnClickListener(){
@@ -107,12 +112,14 @@ public class MainActivity extends ActionBarActivity {
         		
         		//iBeaconスキャン
         		mBluetoothAdapter.startLeScan(mLeScanCallback);
+        		mHandler.sendEmptyMessage(START_SCAN_PROGRESS);
         		
         		//5秒後にスキャン停止
         		mHandler.postDelayed(new Runnable(){
         			@Override
         			public void run(){
         				mBluetoothAdapter.stopLeScan(mLeScanCallback);;
+        				mHandler.sendEmptyMessage(STOP_PROGRESS);
         			}
         		}, 5000);
         	}
