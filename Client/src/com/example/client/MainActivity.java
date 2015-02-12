@@ -59,7 +59,7 @@ public class MainActivity extends ActionBarActivity {
 		public void handleMessage(Message msg){
 			switch (msg.what){
 			case START_CONNECT_PROGRESS:
-				mProgressDialog = ProgressDialog.show(MainActivity.this,"","接続中",true,true);
+				mProgressDialog = ProgressDialog.show(MainActivity.this,"","DISCOVERING",true,true);
 				break;
 			case STOP_PROGRESS:
 				mProgressDialog.dismiss();
