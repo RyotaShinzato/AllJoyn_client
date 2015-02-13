@@ -15,16 +15,26 @@
         android:layout_height="match_parent"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/send" >
+        android:layout_below="@+id/scan" >
 
     </ListView>
 
     <Button
-        android:id="@+id/send"
+        android:id="@+id/scan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/ListView"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:text="scan" />
+        android:layout_marginLeft="36dp"
+        android:text="SCAN" />
+
+    <Button
+        android:id="@+id/find"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/scan"
+        android:layout_alignRight="@+id/ListView"
+        android:layout_marginRight="32dp"
+        android:text="FIND" />
 
 </RelativeLayout>

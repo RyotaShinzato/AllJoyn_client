@@ -34,6 +34,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.Intent;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -53,6 +54,8 @@ public class MainActivity extends ActionBarActivity {
 	private static final int MESSAGE_REPLY = 3;
 	private static final int MESSAGE_PING = 4;
 	private static final int START_SCAN_PROGRESS = 5;
+	private static final int START_SERVICE = 6;
+		
 	
 	private Handler mHandler = new Handler(){
 		@Override
@@ -75,6 +78,9 @@ public class MainActivity extends ActionBarActivity {
 			case START_SCAN_PROGRESS:
 				mProgressDialog = ProgressDialog.show(MainActivity.this,"","SCANNING",true,true);				
 				break;
+			case START_SERVICE:
+				//startService(new Intent(getBaseContext(),Myservice.class));
+				break;
 			default:
 				break;
 			}
@@ -89,28 +95,46 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
+        startService(new Intent(getBaseContext(),Myservice.class));
+        
         mListViewArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
         mListView = (ListView) findViewById(R.id.ListView);
         mListView.setAdapter(mListViewArrayAdapter);
         
+        
         final BluetoothManager mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         final BluetoothAdapter mBluetoothAdapter = mBluetoothManager.getAdapter();
-                        
+        
+        
         HandlerThread busThread = new HandlerThread("BusHandler");
         busThread.start();
         mBusHandler = new BusHandler(busThread.getLooper());
         
-        //CONNECT
-        mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
-        mHandler.sendEmptyMessage(START_CONNECT_PROGRESS);
-                
-        Button btn = (Button)findViewById(R.id.send);
-        btn.setOnClickListener(new View.OnClickListener(){
+        
+        Button btn_find = (Button)findViewById(R.id.find);
+        btn_find.setOnClickListener(new View.OnClickListener(){
         	@Override
         	public void onClick(View v){
-        		Log.d(TAG,"クリック");
+        		Log.d(TAG,"btn_find clicked");
+        		stopService(new Intent(getBaseContext(), Myservice.class));
         		
-        		//iBeaconスキャン
+        		mHandler.postDelayed(new Runnable(){
+        			@Override
+        			public void run(){
+        				mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
+                        mHandler.sendEmptyMessage(START_CONNECT_PROGRESS);
+        			}
+        		},5000);
+        	}
+        });
+        
+        Button btn_scan = (Button)findViewById(R.id.scan);
+        btn_scan.setOnClickListener(new View.OnClickListener() {
+        	@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				Log.d(TAG,"btn_scan clicked");
+				//iBeaconスキャン
         		mBluetoothAdapter.startLeScan(mLeScanCallback);
         		mHandler.sendEmptyMessage(START_SCAN_PROGRESS);
         		
@@ -122,10 +146,9 @@ public class MainActivity extends ActionBarActivity {
         				mHandler.sendEmptyMessage(STOP_PROGRESS);
         			}
         		}, 5000);
-        	}
-        });
-        
-        
+			}
+		});
+                
     }
 
 
@@ -144,11 +167,22 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
     
+    
     @Override
     public void onDestroy(){
     	super.onDestroy();
     	mBusHandler.sendEmptyMessage(BusHandler.DISCONNECT);
     	Log.d(TAG,"ですとろーい");
+    }
+    
+    public void startService(){
+    	Log.d(TAG,"startService() called");
+    	mHandler.postDelayed(new Runnable(){
+    		@Override
+    		public void run(){
+    			startService(new Intent(getBaseContext(),Myservice.class));
+    		}
+    	}, 5000);
     }
     
     class BusHandler extends Handler {
@@ -157,8 +191,8 @@ public class MainActivity extends ActionBarActivity {
     	
     	private BusAttachment mBus;
     	private ProxyBusObject mProxyObj;
-    	private SimpleInterface mClientInterface;
-    	
+    	private SimpleInterface mFisrstInterface;
+    	    	
     	private int mSessionId;
     	private boolean mIsInASession;
     	private boolean mIsConnected;
@@ -168,6 +202,7 @@ public class MainActivity extends ActionBarActivity {
     	public static final int JOIN_SESSION = 2;
     	public static final int DISCONNECT = 3;
     	public static final int PING = 4;
+    	public static final int JOIN_SESSION2 = 5;
     	
     	   public BusHandler(Looper looper) {
     	      super(looper);
@@ -186,21 +221,23 @@ public class MainActivity extends ActionBarActivity {
       	    	  
     	    	  mBus = new BusAttachment(getPackageName(), BusAttachment.RemoteMessage.Receive);
 
-
+    	    	  
     	    	  mBus.registerBusListener(new BusListener() {
     	    		  
     	    		  //つながったら呼ばれる
                       @Override
                       public void foundAdvertisedName(String name, short transport, String namePrefix) {
                       	Log.d(TAG,"foundadvertisedname呼ばれた");
-                      	if(!mIsConnected) {
+                      	//if(!mIsConnected) {
+                      		Log.d(TAG,"mISConnected");
                       	    Message msg = obtainMessage(JOIN_SESSION);
                       	    msg.arg1 = transport;
                       	    msg.obj = name;
                       	    sendMessage(msg);
-                      	}
+                      	//}
                       }
                   });
+    	    	  
     	    	  
     	    	  //ここでpermission怒られてるっぽい
     	    	  Status status = mBus.connect();
@@ -216,7 +253,7 @@ public class MainActivity extends ActionBarActivity {
     	    		  finish();
     	    		  return;
     	    	  }
-    	    	  
+    	    	      	    	  
     	    	      	    	  
     	    	  break;
     	      }
@@ -243,8 +280,8 @@ public class MainActivity extends ActionBarActivity {
     	    	  
     	    	  if(status == Status.OK){
     	    		  mProxyObj = mBus.getProxyBusObject(SERVICE_NAME, "/Service", sessionId.value, new Class<?>[]{ SimpleInterface.class});
-    	    		  mClientInterface = mProxyObj.getInterface(SimpleInterface.class);
-    	    		  
+    	    		  mFisrstInterface = mProxyObj.getInterface(SimpleInterface.class);
+
     	    		  mSessionId = sessionId.value;
     	    		  mIsConnected = true;
     	    		  mHandler.sendEmptyMessage(STOP_PROGRESS);
@@ -264,11 +301,13 @@ public class MainActivity extends ActionBarActivity {
     	      }
     	      case PING:{
     	    	  try{
-    	    		  if(mClientInterface != null){
-    	    			  String reply = mClientInterface.Ping((String) msg.obj);
+    	    		  if(mFisrstInterface != null){
+    	    			  String reply = mFisrstInterface.Ping((String) msg.obj);
     	    			  mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_REPLY,reply));
+    	    			  mHandler.sendEmptyMessage(START_SERVICE);
+    	    			  startService();
     	    		  }
-    	    	  } catch(BusException ex){
+    	    	  }catch(BusException ex){
     	    		  Log.d(TAG,"exception "+ex);
     	    	  }
     	    	  break;
@@ -283,7 +322,8 @@ private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.L
 		@Override
 		public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
 			// TODO Auto-generated method stub
-						
+			
+			Log.d(TAG,"onLeScanよばれた");
 			if(scanRecord.length > 30)
 		    {
 		        //iBeacon の場合 6 byte 目から、 9 byte 目はこの値に固定されている。
@@ -314,6 +354,7 @@ private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.L
 		            String major = IntToHex2(scanRecord[25] & 0xff) + IntToHex2(scanRecord[26] & 0xff);
 		            String minor = IntToHex2(scanRecord[27] & 0xff) + IntToHex2(scanRecord[28] & 0xff);
 		            String message = "UUID: " + uuid + "\n RSSI: " + String.valueOf(rssi);
+		            Log.d(TAG,"UUID: "+uuid + "RSSI: "+ rssi);
 		            Message msg = mBusHandler.obtainMessage(mBusHandler.PING,message);
 		            mBusHandler.sendMessage(msg);
 		        }
