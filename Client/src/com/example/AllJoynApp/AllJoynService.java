@@ -1,4 +1,4 @@
-package com.example.client;
+package com.example.AllJoynApp;
 
 import android.app.Service;
 import android.content.Intent;

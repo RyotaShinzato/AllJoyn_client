@@ -1,4 +1,4 @@
-package com.example.client;
+package com.example.AllJoynApp;
 
 import java.lang.reflect.Method;
 
@@ -117,6 +117,7 @@ public class AllJoynClient extends ActionBarActivity {
         busThread.start();
         mBusHandler = new BusHandler(busThread.getLooper());
         
+                
         //FINDボタン押された処理
         Button btn_find = (Button)findViewById(R.id.find);
         btn_find.setOnClickListener(new View.OnClickListener(){
@@ -159,7 +160,6 @@ public class AllJoynClient extends ActionBarActivity {
         		}, 2000);
 			}
 		});
-                
     }
 
 
@@ -202,7 +202,7 @@ public class AllJoynClient extends ActionBarActivity {
     	
     	private BusAttachment mBus;
     	private ProxyBusObject mProxyObj;
-    	private SimpleInterface mFisrstInterface;
+    	private SimpleInterface mSimpleInterface;
     	    	
     	private int mSessionId;
     	private boolean mIsInASession;
@@ -213,8 +213,7 @@ public class AllJoynClient extends ActionBarActivity {
     	public static final int JOIN_SESSION = 2;
     	public static final int DISCONNECT = 3;
     	public static final int PING = 4;
-    	public static final int JOIN_SESSION2 = 5;
-    	
+    	    	
     	   public BusHandler(Looper looper) {
     	      super(looper);
     	      
@@ -248,9 +247,7 @@ public class AllJoynClient extends ActionBarActivity {
                       	}
                       }
                   });
-    	    	  
-    	    	  
-    	    	  //ここでpermission怒られてるっぽい
+    	    	      	    	  
     	    	  Status status = mBus.connect();
     	    	  Log.d(TAG,"connect: "+status);
     	    	  if(Status.OK != status){
@@ -291,7 +288,7 @@ public class AllJoynClient extends ActionBarActivity {
     	    	  
     	    	  if(status == Status.OK){
     	    		  mProxyObj = mBus.getProxyBusObject(SERVICE_NAME, "/Service", sessionId.value, new Class<?>[]{ SimpleInterface.class});
-    	    		  mFisrstInterface = mProxyObj.getInterface(SimpleInterface.class);
+    	    		  mSimpleInterface = mProxyObj.getInterface(SimpleInterface.class);
 
     	    		  mSessionId = sessionId.value;
     	    		  mIsConnected = true;
@@ -312,8 +309,8 @@ public class AllJoynClient extends ActionBarActivity {
     	      }
     	      case PING:{
     	    	  try{
-    	    		  if(mFisrstInterface != null){
-    	    			  String reply = mFisrstInterface.Ping((String) msg.obj);
+    	    		  if(mSimpleInterface != null){
+    	    			  String reply = mSimpleInterface.Ping((String) msg.obj);
     	    			  mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_REPLY,reply));
     	    			  startService();
     	    			  mIsConnected = false;

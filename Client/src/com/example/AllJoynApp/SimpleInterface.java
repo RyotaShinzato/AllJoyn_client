@@ -1,4 +1,4 @@
-package com.example.client;
+package com.example.AllJoynApp;
 
 import org.alljoyn.bus.BusException;
 import org.alljoyn.bus.annotation.BusInterface;
