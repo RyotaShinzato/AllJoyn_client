@@ -33,6 +33,7 @@ import android.bluetooth.BluetoothAdapter.LeScanCallback;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -104,7 +105,6 @@ public class MainActivity extends ActionBarActivity {
         mListView.setAdapter(mListViewArrayAdapter);
         
         receiver = new Myservice_receiver();
-        receiver.activity = this;
         intentFilter = new IntentFilter();
         intentFilter.addAction("MY_ACTION");
         registerReceiver(receiver,intentFilter);
@@ -117,24 +117,28 @@ public class MainActivity extends ActionBarActivity {
         busThread.start();
         mBusHandler = new BusHandler(busThread.getLooper());
         
-        
+        //FINDボタン押された処理
         Button btn_find = (Button)findViewById(R.id.find);
         btn_find.setOnClickListener(new View.OnClickListener(){
         	@Override
         	public void onClick(View v){
         		Log.d(TAG,"btn_find clicked");
+        		//service切る
         		stopService(new Intent(getBaseContext(), Myservice.class));
+        		//progressバー表示
         		mHandler.sendEmptyMessage(START_CONNECT_PROGRESS);
         		
+        		//2待ってコネクト
         		mHandler.postDelayed(new Runnable(){
         			@Override
         			public void run(){
         				mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
         			}
-        		},3000);
+        		},2000);
         	}
         });
         
+        //SCANボタン押された処理
         Button btn_scan = (Button)findViewById(R.id.scan);
         btn_scan.setOnClickListener(new View.OnClickListener() {
         	@Override
@@ -145,14 +149,14 @@ public class MainActivity extends ActionBarActivity {
         		mBluetoothAdapter.startLeScan(mLeScanCallback);
         		mHandler.sendEmptyMessage(START_SCAN_PROGRESS);
         		
-        		//5秒後にスキャン停止
+        		//2秒後にスキャン停止
         		mHandler.postDelayed(new Runnable(){
         			@Override
         			public void run(){
         				mBluetoothAdapter.stopLeScan(mLeScanCallback);;
         				mHandler.sendEmptyMessage(STOP_PROGRESS);
         			}
-        		}, 5000);
+        		}, 2000);
 			}
 		});
                 
@@ -374,6 +378,19 @@ private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.L
 		    String hex_2_str = new String(hex_2);
 		    return hex_2_str.toUpperCase();
 		}
+	};
+	
+	public class Myservice_receiver extends BroadcastReceiver{
 		
-    };
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// TODO Auto-generated method stub
+			Log.d("Myserive_receiver","onReceive");
+			
+			Bundle bundle = intent.getExtras();
+			String message = bundle.getString("message");
+			Log.d("My_serive_receiver",message);
+			mListViewArrayAdapter.add(message);
+		}
+	}
 }
