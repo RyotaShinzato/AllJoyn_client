@@ -38,6 +38,13 @@ public class Myservice extends Service{
 			case MESSAGE_PING_REPLY:
 				String reply = (String) msg.obj;
 				Log.d(TAG,reply);
+				
+				//add
+				Intent broadcastIntent = new Intent();
+				broadcastIntent.putExtra("message",reply);
+				broadcastIntent.setAction("MY_ACTION");
+				getBaseContext().sendBroadcast(broadcastIntent);
+				
 				break;
 			default:
 					break;

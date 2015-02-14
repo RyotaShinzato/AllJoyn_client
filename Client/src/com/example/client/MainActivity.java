@@ -35,6 +35,7 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -47,6 +48,10 @@ public class MainActivity extends ActionBarActivity {
 	private ArrayAdapter<String> mListViewArrayAdapter;
 	private ListView mListView;
 	private ProgressDialog mProgressDialog;
+	
+	IntentFilter intentFilter;
+	Myservice_receiver receiver;
+	Intent intent = null;
 	
 	private static final String TAG = "Client";
 	private static final int START_CONNECT_PROGRESS = 1;
@@ -98,7 +103,12 @@ public class MainActivity extends ActionBarActivity {
         mListView = (ListView) findViewById(R.id.ListView);
         mListView.setAdapter(mListViewArrayAdapter);
         
-        
+        receiver = new Myservice_receiver();
+        receiver.activity = this;
+        intentFilter = new IntentFilter();
+        intentFilter.addAction("MY_ACTION");
+        registerReceiver(receiver,intentFilter);
+                
         final BluetoothManager mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         final BluetoothAdapter mBluetoothAdapter = mBluetoothManager.getAdapter();
         
@@ -121,7 +131,7 @@ public class MainActivity extends ActionBarActivity {
         			public void run(){
         				mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
         			}
-        		},5000);
+        		},3000);
         	}
         });
         
