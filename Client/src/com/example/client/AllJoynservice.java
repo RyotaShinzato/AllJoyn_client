@@ -21,7 +21,7 @@ import org.alljoyn.bus.Status;
 import org.alljoyn.bus.annotation.BusMethod;
 
 
-public class Myservice extends Service{
+public class AllJoynservice extends Service{
 	
 	static{
 		System.loadLibrary("alljoyn_java");

@@ -98,7 +98,7 @@ public class AllJoynClient extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
-        startService(new Intent(getBaseContext(),Myservice.class));
+        startService(new Intent(getBaseContext(),AllJoynservice.class));
         
         mListViewArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
         mListView = (ListView) findViewById(R.id.ListView);
@@ -124,7 +124,7 @@ public class AllJoynClient extends ActionBarActivity {
         	public void onClick(View v){
         		Log.d(TAG,"btn_find clicked");
         		//service切る
-        		stopService(new Intent(getBaseContext(), Myservice.class));
+        		stopService(new Intent(getBaseContext(), AllJoynservice.class));
         		//progressバー表示
         		mHandler.sendEmptyMessage(START_CONNECT_PROGRESS);
         		
@@ -191,7 +191,7 @@ public class AllJoynClient extends ActionBarActivity {
     	mHandler.postDelayed(new Runnable(){
     		@Override
     		public void run(){
-    			startService(new Intent(getBaseContext(),Myservice.class));
+    			startService(new Intent(getBaseContext(),AllJoynservice.class));
     		}
     	}, 5000);
     }
