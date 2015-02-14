@@ -78,9 +78,6 @@ public class MainActivity extends ActionBarActivity {
 			case START_SCAN_PROGRESS:
 				mProgressDialog = ProgressDialog.show(MainActivity.this,"","SCANNING",true,true);				
 				break;
-			case START_SERVICE:
-				//startService(new Intent(getBaseContext(),Myservice.class));
-				break;
 			default:
 				break;
 			}
@@ -117,12 +114,12 @@ public class MainActivity extends ActionBarActivity {
         	public void onClick(View v){
         		Log.d(TAG,"btn_find clicked");
         		stopService(new Intent(getBaseContext(), Myservice.class));
+        		mHandler.sendEmptyMessage(START_CONNECT_PROGRESS);
         		
         		mHandler.postDelayed(new Runnable(){
         			@Override
         			public void run(){
         				mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
-                        mHandler.sendEmptyMessage(START_CONNECT_PROGRESS);
         			}
         		},5000);
         	}
@@ -228,13 +225,13 @@ public class MainActivity extends ActionBarActivity {
                       @Override
                       public void foundAdvertisedName(String name, short transport, String namePrefix) {
                       	Log.d(TAG,"foundadvertisedname呼ばれた");
-                      	//if(!mIsConnected) {
+                      	if(!mIsConnected) {
                       		Log.d(TAG,"mISConnected");
                       	    Message msg = obtainMessage(JOIN_SESSION);
                       	    msg.arg1 = transport;
                       	    msg.obj = name;
                       	    sendMessage(msg);
-                      	//}
+                      	}
                       }
                   });
     	    	  
@@ -304,8 +301,8 @@ public class MainActivity extends ActionBarActivity {
     	    		  if(mFisrstInterface != null){
     	    			  String reply = mFisrstInterface.Ping((String) msg.obj);
     	    			  mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_REPLY,reply));
-    	    			  mHandler.sendEmptyMessage(START_SERVICE);
     	    			  startService();
+    	    			  mIsConnected = false;
     	    		  }
     	    	  }catch(BusException ex){
     	    		  Log.d(TAG,"exception "+ex);
