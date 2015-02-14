@@ -39,7 +39,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 
 
-public class MainActivity extends ActionBarActivity {
+public class AllJoynClient extends ActionBarActivity {
 
 	static {
 		System.loadLibrary("alljoyn_java");
@@ -68,7 +68,7 @@ public class MainActivity extends ActionBarActivity {
 		public void handleMessage(Message msg){
 			switch (msg.what){
 			case START_CONNECT_PROGRESS:
-				mProgressDialog = ProgressDialog.show(MainActivity.this,"","DISCOVERING",true,true);
+				mProgressDialog = ProgressDialog.show(AllJoynClient.this,"","DISCOVERING",true,true);
 				break;
 			case STOP_PROGRESS:
 				mProgressDialog.dismiss();
@@ -82,7 +82,7 @@ public class MainActivity extends ActionBarActivity {
 				mBusHandler.sendMessage(ms);
 				break;
 			case START_SCAN_PROGRESS:
-				mProgressDialog = ProgressDialog.show(MainActivity.this,"","SCANNING",true,true);				
+				mProgressDialog = ProgressDialog.show(AllJoynClient.this,"","SCANNING",true,true);				
 				break;
 			default:
 				break;
