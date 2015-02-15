@@ -1,6 +1,7 @@
 package com.example.AllJoynApp;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 import org.alljoyn.bus.BusAttachment;
 import org.alljoyn.bus.BusException;
@@ -26,6 +27,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.client.R;
 
@@ -48,6 +50,7 @@ public class AllJoynClient extends ActionBarActivity {
 	BusHandler mBusHandler;
 	private ArrayAdapter<String> mListViewArrayAdapter;
 	private ListView mListView;
+		
 	private ProgressDialog mProgressDialog;
 	
 	IntentFilter intentFilter;
@@ -55,12 +58,14 @@ public class AllJoynClient extends ActionBarActivity {
 	Intent intent = null;
 	
 	private static final String TAG = "Client";
+	private boolean beacon_found;
+	
 	private static final int START_CONNECT_PROGRESS = 1;
 	private static final int STOP_PROGRESS= 2;
 	private static final int MESSAGE_REPLY = 3;
 	private static final int MESSAGE_PING = 4;
 	private static final int START_SCAN_PROGRESS = 5;
-	private static final int START_SERVICE = 6;
+	private static final int BEACON_NOT_FOUND = 6;
 		
 	
 	private Handler mHandler = new Handler(){
@@ -84,6 +89,9 @@ public class AllJoynClient extends ActionBarActivity {
 			case START_SCAN_PROGRESS:
 				mProgressDialog = ProgressDialog.show(AllJoynClient.this,"","SCANNING",true,true);				
 				break;
+			case BEACON_NOT_FOUND:
+				String message = "iBeacon not found";
+				Toast.makeText(getApplication(), message, Toast.LENGTH_LONG).show();
 			default:
 				break;
 			}
@@ -99,7 +107,7 @@ public class AllJoynClient extends ActionBarActivity {
         setContentView(R.layout.activity_main);
         
         startService(new Intent(getBaseContext(),AllJoynService.class));
-        
+                
         mListViewArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
         mListView = (ListView) findViewById(R.id.ListView);
         mListView.setAdapter(mListViewArrayAdapter);
@@ -116,7 +124,6 @@ public class AllJoynClient extends ActionBarActivity {
         HandlerThread busThread = new HandlerThread("BusHandler");
         busThread.start();
         mBusHandler = new BusHandler(busThread.getLooper());
-        
                 
         //FINDボタン押された処理
         Button btn_find = (Button)findViewById(R.id.find);
@@ -124,6 +131,7 @@ public class AllJoynClient extends ActionBarActivity {
         	@Override
         	public void onClick(View v){
         		Log.d(TAG,"btn_find clicked");
+        		        		
         		//service切る
         		stopService(new Intent(getBaseContext(), AllJoynService.class));
         		//progressバー表示
@@ -146,6 +154,12 @@ public class AllJoynClient extends ActionBarActivity {
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				Log.d(TAG,"btn_scan clicked");
+				
+				beacon_found = false;
+				
+				//ListViewクリア
+				mListViewArrayAdapter.clear();
+				
 				//iBeaconスキャン
         		mBluetoothAdapter.startLeScan(mLeScanCallback);
         		mHandler.sendEmptyMessage(START_SCAN_PROGRESS);
@@ -156,6 +170,14 @@ public class AllJoynClient extends ActionBarActivity {
         			public void run(){
         				mBluetoothAdapter.stopLeScan(mLeScanCallback);;
         				mHandler.sendEmptyMessage(STOP_PROGRESS);
+        				
+        				//ビーコン発見できなかった処理
+        				if(beacon_found == false){
+        					String message = "iBeacon not found";
+        					Message msg = mBusHandler.obtainMessage(BusHandler.PING,message);
+        			        mBusHandler.sendMessage(msg);
+        					mHandler.sendEmptyMessage(BEACON_NOT_FOUND);
+        				}
         			}
         		}, 2000);
 			}
@@ -325,13 +347,16 @@ public class AllJoynClient extends ActionBarActivity {
     	      }
     	   }
     }
-private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
+    
+    private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
 		
 		@Override
 		public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
 			// TODO Auto-generated method stub
-			
+						
 			Log.d(TAG,"onLeScanよばれた");
+			beacon_found = true;
+			
 			if(scanRecord.length > 30)
 		    {
 		        //iBeacon の場合 6 byte 目から、 9 byte 目はこの値に固定されている。
@@ -363,7 +388,7 @@ private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.L
 		            String minor = IntToHex2(scanRecord[27] & 0xff) + IntToHex2(scanRecord[28] & 0xff);
 		            String message = "UUID: " + uuid + "\n RSSI: " + String.valueOf(rssi);
 		            Log.d(TAG,"UUID: "+uuid + "RSSI: "+ rssi);
-		            Message msg = mBusHandler.obtainMessage(mBusHandler.PING,message);
+		            Message msg = mBusHandler.obtainMessage(BusHandler.PING,message);
 		            mBusHandler.sendMessage(msg);
 		        }
 		    }
@@ -386,7 +411,13 @@ private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.L
 			
 			Bundle bundle = intent.getExtras();
 			String message = bundle.getString("message");
+			String not_found = "iBeacon not found";
+			
+			if(message.equals(not_found)){
+				mHandler.sendEmptyMessage(BEACON_NOT_FOUND);
+			}
 			Log.d("My_serive_receiver",message);
+			mListViewArrayAdapter.clear();
 			mListViewArrayAdapter.add(message);
 		}
 	}
