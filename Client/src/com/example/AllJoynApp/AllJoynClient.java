@@ -80,11 +80,12 @@ public class AllJoynClient extends ActionBarActivity {
 				break;
 			case MESSAGE_REPLY:
 				String rep = (String)msg.obj;
+				Log.d(TAG,rep);
 				mListViewArrayAdapter.add(rep);
 				break;
 			case MESSAGE_PING:
-				Message ms = mBusHandler.obtainMessage(BusHandler.PING, msg.obj);
-				mBusHandler.sendMessage(ms);
+				String ping = (String)msg.obj;
+				mListViewArrayAdapter.add(ping);
 				break;
 			case START_SCAN_PROGRESS:
 				mProgressDialog = ProgressDialog.show(AllJoynClient.this,"","SCANNING",true,true);				
@@ -124,7 +125,8 @@ public class AllJoynClient extends ActionBarActivity {
         HandlerThread busThread = new HandlerThread("BusHandler");
         busThread.start();
         mBusHandler = new BusHandler(busThread.getLooper());
-                
+        
+        
         //FINDボタン押された処理
         Button btn_find = (Button)findViewById(R.id.find);
         btn_find.setOnClickListener(new View.OnClickListener(){
@@ -216,6 +218,11 @@ public class AllJoynClient extends ActionBarActivity {
     			startService(new Intent(getBaseContext(),AllJoynService.class));
     		}
     	}, 5000);
+    }
+    
+    public void startConnect(){
+    	Log.d(TAG,"startConnect()");
+    	mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
     }
     
     class BusHandler extends Handler {
@@ -332,8 +339,8 @@ public class AllJoynClient extends ActionBarActivity {
     	      case PING:{
     	    	  try{
     	    		  if(mSimpleInterface != null){
-    	    			  String reply = mSimpleInterface.Ping((String) msg.obj);
-    	    			  mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_REPLY,reply));
+    	    			  mSimpleInterface.Ping((String) msg.obj);
+    	    			  //mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_REPLY,reply));
     	    			  startService();
     	    			  mIsConnected = false;
     	    		  }
@@ -390,6 +397,7 @@ public class AllJoynClient extends ActionBarActivity {
 		            Log.d(TAG,"UUID: "+uuid + "RSSI: "+ rssi);
 		            Message msg = mBusHandler.obtainMessage(BusHandler.PING,message);
 		            mBusHandler.sendMessage(msg);
+		            mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_REPLY,message));
 		        }
 		    }
 		    
