@@ -1,5 +1,6 @@
 package com.example.AllJoynApp;
 
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
@@ -59,6 +60,7 @@ public class AllJoynClient extends ActionBarActivity {
 	
 	private static final String TAG = "Client";
 	private boolean beacon_found;
+	private boolean list_clear = true;
 	
 	private static final int START_CONNECT_PROGRESS = 1;
 	private static final int STOP_PROGRESS= 2;
@@ -80,8 +82,14 @@ public class AllJoynClient extends ActionBarActivity {
 				break;
 			case MESSAGE_REPLY:
 				String rep = (String)msg.obj;
-				Log.d(TAG,rep);
 				mListViewArrayAdapter.add(rep);
+				
+				mHandler.postDelayed(new Runnable(){
+					@Override
+					public void run(){
+						list_clear = true;
+					}
+				},5000);
 				break;
 			case MESSAGE_PING:
 				String ping = (String)msg.obj;
@@ -397,7 +405,7 @@ public class AllJoynClient extends ActionBarActivity {
 		            Log.d(TAG,"UUID: "+uuid + "RSSI: "+ rssi);
 		            Message msg = mBusHandler.obtainMessage(BusHandler.PING,message);
 		            mBusHandler.sendMessage(msg);
-		            mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_REPLY,message));
+		            mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_PING,message));
 		        }
 		    }
 		    
@@ -417,16 +425,23 @@ public class AllJoynClient extends ActionBarActivity {
 			// TODO Auto-generated method stub
 			Log.d("Myserive_receiver","onReceive");
 			
+			
+			Log.d(TAG,"list_clear: "+list_clear);
+			if(list_clear == true){
+				mListViewArrayAdapter.clear();
+			}
+						
 			Bundle bundle = intent.getExtras();
 			String message = bundle.getString("message");
 			String not_found = "iBeacon not found";
 			
 			if(message.equals(not_found)){
 				mHandler.sendEmptyMessage(BEACON_NOT_FOUND);
+			}else{
+				mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_REPLY,message));
 			}
 			Log.d("My_serive_receiver",message);
-			mListViewArrayAdapter.clear();
-			mListViewArrayAdapter.add(message);
+			list_clear = false;
 		}
 	}
 }
