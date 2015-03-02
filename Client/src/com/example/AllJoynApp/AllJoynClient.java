@@ -49,6 +49,7 @@ public class AllJoynClient extends ActionBarActivity {
 	}
 	
 	BusHandler mBusHandler;
+	
 	private ArrayAdapter<String> mListViewArrayAdapter;
 	private ListView mListView;
 		
@@ -115,6 +116,7 @@ public class AllJoynClient extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
+        //serviceスタート
         startService(new Intent(getBaseContext(),AllJoynService.class));
                 
         mListViewArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
@@ -122,10 +124,12 @@ public class AllJoynClient extends ActionBarActivity {
         mListView.setAdapter(mListViewArrayAdapter);
         
         receiver = new Myservice_receiver();
+        
         intentFilter = new IntentFilter();
         intentFilter.addAction("MY_ACTION");
         registerReceiver(receiver,intentFilter);
                 
+        //bluetooth
         final BluetoothManager mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         final BluetoothAdapter mBluetoothAdapter = mBluetoothManager.getAdapter();
         
@@ -147,7 +151,7 @@ public class AllJoynClient extends ActionBarActivity {
         		//progressバー表示
         		mHandler.sendEmptyMessage(START_CONNECT_PROGRESS);
         		
-        		//2待ってコネクト
+        		//2秒待ってコネクト
         		mHandler.postDelayed(new Runnable(){
         			@Override
         			public void run(){
@@ -218,6 +222,7 @@ public class AllJoynClient extends ActionBarActivity {
     	Log.d(TAG,"ですとろーい");
     }
     
+    //serviceスタート
     public void startService(){
     	Log.d(TAG,"startService() called");
     	mHandler.postDelayed(new Runnable(){
@@ -228,10 +233,12 @@ public class AllJoynClient extends ActionBarActivity {
     	}, 5000);
     }
     
+    /* 使ってない
     public void startConnect(){
     	Log.d(TAG,"startConnect()");
     	mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
     }
+    */
     
     class BusHandler extends Handler {
     	private static final String SERVICE_NAME = "org.alljoyn.bus.samples.simple";
@@ -398,7 +405,7 @@ public class AllJoynClient extends ActionBarActivity {
 		                        + IntToHex2(scanRecord[22] & 0xff)
 		                        + IntToHex2(scanRecord[23] & 0xff)
 		                        + IntToHex2(scanRecord[24] & 0xff);
-		 
+		            
 		            String major = IntToHex2(scanRecord[25] & 0xff) + IntToHex2(scanRecord[26] & 0xff);
 		            String minor = IntToHex2(scanRecord[27] & 0xff) + IntToHex2(scanRecord[28] & 0xff);
 		            String message = "UUID: " + uuid + "\n RSSI: " + String.valueOf(rssi);
@@ -410,7 +417,7 @@ public class AllJoynClient extends ActionBarActivity {
 		    }
 		    
 		}
-		
+		//変換
 		private String IntToHex2(int i) {
 			char hex_2[] = {Character.forDigit((i>>4) & 0x0f,16),Character.forDigit(i&0x0f, 16)};
 		    String hex_2_str = new String(hex_2);
@@ -418,6 +425,7 @@ public class AllJoynClient extends ActionBarActivity {
 		}
 	};
 	
+	//broadcast receiver
 	public class Myservice_receiver extends BroadcastReceiver{
 		
 		@Override
